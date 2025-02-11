@@ -39,12 +39,15 @@ function findCondaPath() {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-    const cloneRepos = vscode.commands.registerCommand('nuedgewise.cloneRepos', async () => {
+    const cloneRepos = vscode.commands.registerCommand('nuedgewise.cloneRepos', async ( repo_test: any) => {
         // Prompt user for repository URLs
+        if (!repo_test) {
+          repo_test = github_repositories.map(repo => repo.url);
+        }
         const repoUrls = await vscode.window.showInputBox({
             prompt: 'Enter GitHub repository URLs separated by commas',
-           // placeHolder: 'https://github.com/OpenNuvoton/NuEdgeWise, https://github.com/OpenNuvoton/ML_G-Sensor',
-           value: github_repositories.map(repo => repo.url).join(', '),
+           //value: github_repositories.map(repo => repo.url).join(', '),
+            value: repo_test.join(', '),
         });
 
         if (!repoUrls) {
@@ -70,8 +73,7 @@ export function activate(context: vscode.ExtensionContext) {
         //    prompt: 'Enter a name for the new folder where repositories will be cloned',
         //    placeHolder: 'my_repos',
         //});
-		const folderName = 'NuEdgeWise'; // use default folder name
-
+		    const folderName = 'NuEdgeWise'; // use default folder name
         if (!folderName) {
             vscode.window.showErrorMessage('No folder name provided.');
             return;
@@ -145,7 +147,7 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
 	// Command to set up a Python environment (supports venv and Conda)
-	const setupPythonEnv = vscode.commands.registerCommand('nuedgewise.setupPythonEnv', async () => {
+	const setupPythonEnv = vscode.commands.registerCommand('nuedgewise.setupPythonEnv', async (msg_envType: string, msg_envName: string) => {
 
        const projectUri = await vscode.window.showOpenDialog({
            canSelectFolders: true,
@@ -158,19 +160,25 @@ export function activate(context: vscode.ExtensionContext) {
        const projectPath = projectUri[0].fsPath;
 
        // Ask user to choose between venv and Conda
-       const envType = await vscode.window.showQuickPick(["Conda"], {
+       let envType = await vscode.window.showQuickPick(["Conda"], {
            placeHolder: "Select the type of Python environment to create",
        });
-       if (!envType) {
+       if (msg_envType) {
+           envType = msg_envType;
+       }
+       if (!envType && !msg_envType) {
            vscode.window.showErrorMessage("No environment type selected.");
            return;
        }
 
        // Prompt user for the environment name
+       if (!msg_envName) {
+        msg_envName = 'NuEdgeWise_env';
+       }
        const envName = await vscode.window.showInputBox({
            prompt: "Enter a name for the Conda environment",
-           //placeHolder: "NuEdgeWise_env_test",
-           value: 'test_NuEdgeWise_env',
+           //value: 'test_NuEdgeWise_env',
+           value: msg_envName,
        });
        if (!envName) {
            vscode.window.showErrorMessage("No environment name provided.");
@@ -280,7 +288,7 @@ export function activate(context: vscode.ExtensionContext) {
                            child_process.execSync(`conda run -n ${envName} python -m pip install --upgrade pip setuptools`, { cwd: projectPath });
                            progress.report({ message: "Installing dependencies in Conda environment..." });
                            child_process.execSync(`conda run -n ${envName} python -m pip install -r requirements.txt`, { cwd: projectPath });
-                           vscode.window.showInformationMessage('Dependencies successfully installed in ${envName}.');
+                           vscode.window.showInformationMessage(`Dependencies successfully installed in '${envName}'.`);
 
                            // Use terminal
                            //terminal.sendText(`conda run -n ${envName} python -m pip install --upgrade pip setuptools`);
@@ -312,8 +320,158 @@ export function activate(context: vscode.ExtensionContext) {
        });
     });
 
-    context.subscriptions.push(cloneRepos, setupPythonEnv);
+    const cloneReposSidebar = vscode.window.registerWebviewViewProvider("cloneSidebar", {
+        resolveWebviewView(webviewView) {
+          webviewView.webview.options = {
+            enableScripts: true,
+          };
+      
+          webviewView.webview.html = getWebviewContent_cloneSidebar();
+          webviewView.webview.onDidReceiveMessage((message) => {
+            if (message.command === "clone") {
+              const repos = message.repos.filter((repo: string) => repo.trim() !== "");
+              if (repos.length > 0) {
+                vscode.commands.executeCommand("nuedgewise.cloneRepos", repos);
+              } else {
+                vscode.window.showErrorMessage("No repositories selected.");
+              }
+            }
+          });
+        },
+      });
+
+    const pythonEnvSetSidebar = vscode.window.registerWebviewViewProvider("pythonEnvSidebar", {
+      resolveWebviewView(webviewView) {
+        webviewView.webview.options = {
+          enableScripts: true,
+        };
+    
+        webviewView.webview.html = getWebviewContent_pythonEnvSidebar();
+        webviewView.webview.onDidReceiveMessage((message) => {
+          if (message.command === "setup") {
+           
+            const envType: string = message.envType;
+            const envName: string = message.envName;
+            vscode.commands.executeCommand("nuedgewise.setupPythonEnv", envType, envName);
+          
+          }
+        });
+      },
+    });  
+
+    context.subscriptions.push(cloneRepos, setupPythonEnv,
+         cloneReposSidebar, pythonEnvSetSidebar);
 }
+
+function getWebviewContent_cloneSidebar() {
+  const repos = github_repositories;
+
+  const repoListItems = repos.map(repo => 
+    `<li><input type="checkbox" value="${repo.url}" checked>${repo.name}</li>`
+  ).join('');
+
+  return `<!DOCTYPE html>
+  <html>
+  <head>
+    <script>
+      function cloneRepos() {
+        const checkboxes = document.querySelectorAll("input[type='checkbox']:checked");
+        const repos = Array.from(checkboxes).map(cb => cb.value);
+        vscode.postMessage({ command: "clone", repos });
+      }
+    </script>
+  </head>
+  <body>
+    <h3>Clone GitHub Repositories</h3>
+    <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+      <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; width: 100%;">
+        <input type="text" id="repoInput" placeholder="Enter repo URL and press Add" size="30">
+      </div> 
+      <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; width: 100%;">  
+        <button onclick="addRepo()">Add</button>
+      </div>
+    </div>
+    
+    <h3>The Repositories List</h3>
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; width: 100%;">
+      <ul id="repoList">
+        ${repoListItems}
+      </ul>
+    </div>  
+    <button onclick="cloneRepos()">Clone Selected</button>
+  
+    <script>
+      const vscode = acquireVsCodeApi();
+      
+      function addRepo() {
+        const repoInput = document.getElementById("repoInput");
+        if (repoInput.value.trim()) {
+          const ul = document.getElementById("repoList");
+          const li = document.createElement("li");
+          li.innerHTML = \`<input type="checkbox" value="\${repoInput.value}">\${repoInput.value}\`;
+          ul.appendChild(li);
+          repoInput.value = "";
+        }
+      }
+    </script>
+  </body>
+  </html>`;
+}
+
+function getWebviewContent_pythonEnvSidebar() {
+
+  return `<!DOCTYPE html>
+  <html>
+  <head>
+    <script>
+      function setupPython() {
+        const envName = document.getElementById("envName").value || "env";
+        const envType = document.getElementById("envType").value;
+  
+        vscode.postMessage({ command: "setup", envType, envName });
+      }
+    </script>
+  </head>
+  <body>
+  <style>
+    .label-margin {
+      margin-right: 100px; /* Adjust the value as needed */
+    }
+    .input-margin {
+      margin-right: 200px; /* Adjust the value as needed */
+    }
+    .button-margin {
+      margin-top: 100px; /* Adjust the value as needed */
+    }    
+  </style>
+    <h3>Python Environment Setup</h3>
+  
+    <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+      <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; width: 100%;"> 
+      <label for="envName">Environment Name:</label>
+        <input type="text" id="envName" placeholder="Enter environment name" value="NuEdgeWise_env" />
+      </div> 
+    
+      <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; width: 100%;"> 
+      <label for="envType">Environment Type:</label>
+        <select id="envType">
+          <option value="Conda">Conda</option>
+          <option value="Virtualenv (venv)">Virtualenv (venv)</option>
+      </select>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; width: 50%;">
+        <button onclick="setupPython()">Setup Environment</button>
+      </div>
+    </div>
+    
+    
+    <script>
+      const vscode = acquireVsCodeApi();
+    </script>
+  </body>
+  </html>`;
+  
+}  
 
 // This method is called when your extension is deactivated
 export function deactivate() {}

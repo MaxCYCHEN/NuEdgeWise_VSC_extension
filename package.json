@@ -25,7 +25,30 @@
         "command": "nuedgewise.setupPythonEnv",
         "title": "NuEdgeWise: Set Up Python Environment"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "NuEdgeWise",
+          "title": "NuEdgeWise",
+          "icon": "resources/n-svgrepo-com.svg"
+        }
+      ]
+    },
+    "views": {
+      "NuEdgeWise": [
+        {
+          "id": "cloneSidebar",
+          "name": "Clone Repos",
+          "type": "webview"
+        },
+        {
+          "id": "pythonEnvSidebar",
+          "name": "Python Environment Setup",
+          "type": "webview"
+        }
+      ]
+    }    
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
