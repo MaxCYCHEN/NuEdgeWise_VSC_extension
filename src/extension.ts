@@ -320,6 +320,48 @@ export function activate(context: vscode.ExtensionContext) {
        });
     });
 
+    let runVela = vscode.commands.registerCommand('nuedgewise.runVela', async (optimize?: string, acc_cfg?: string, sys_cfg?: string) => {
+      
+      // choose the input tflite file
+      const fileUri = await vscode.window.showOpenDialog({ 
+          canSelectMany: false, 
+          filters: { 'TFLite Files': ['tflite'] },
+          openLabel: 'Select Your TFLite File',
+      });
+      if (!fileUri) return;
+      const inputFile = fileUri[0].fsPath;
+
+      const defaultOutput = path.join(path.dirname(inputFile));
+
+      // choose the output vela_tflite file
+      const outputUri = await vscode.window.showOpenDialog({
+        defaultUri: vscode.Uri.file(defaultOutput),
+        canSelectFolders: true,
+        openLabel: 'Select Output Vela TFLite Folder',
+      });
+      if (!outputUri || outputUri.length === 0) {
+          vscode.window.showErrorMessage('No project folder selected.');
+          return;
+      }
+
+      // Get the EXE path inside the extension
+      const exePath = context.asAbsolutePath(path.join('resources', 'vela-4_0_1.exe'));
+      const vela_conf_file = context.asAbsolutePath(path.join('resources', 'default_vela.ini'));
+      //const vela_conf_file = '../resources/default_vela.ini';
+
+      const outputFile = outputUri[0].fsPath;
+      const optimizeFlag = optimize ? `${optimize}` : 'Performance';
+      const acc_config = acc_cfg ? `${acc_cfg}`: 'ethos-u55-256';
+      const system_config = sys_cfg ? `${sys_cfg}` : 'Ethos_U55_High_End_Embedded';
+      const memory_mode = 'Shared_Sram';
+
+      const terminal = vscode.window.createTerminal("TFLite Runner");
+      terminal.show();
+      terminal.sendText(`${exePath} "${inputFile}" --accelerator-config ${acc_config} `+
+        `--optimise ${optimizeFlag} --config ${vela_conf_file} --memory-mode ${memory_mode} `+
+        `--system-config ${system_config} --output-dir "${outputFile}"`);
+    });
+
     const cloneReposSidebar = vscode.window.registerWebviewViewProvider("cloneSidebar", {
         resolveWebviewView(webviewView) {
           webviewView.webview.options = {
@@ -359,8 +401,11 @@ export function activate(context: vscode.ExtensionContext) {
       },
     });  
 
-    context.subscriptions.push(cloneRepos, setupPythonEnv,
+    context.subscriptions.push(cloneRepos, setupPythonEnv, runVela,
          cloneReposSidebar, pythonEnvSetSidebar);
+    context.subscriptions.push(
+          vscode.window.registerWebviewViewProvider('velaTFLiteConversion', new TFLiteWebView(context))
+      );     
 }
 
 function getWebviewContent_cloneSidebar() {
@@ -433,17 +478,7 @@ function getWebviewContent_pythonEnvSidebar() {
     </script>
   </head>
   <body>
-  <style>
-    .label-margin {
-      margin-right: 100px; /* Adjust the value as needed */
-    }
-    .input-margin {
-      margin-right: 200px; /* Adjust the value as needed */
-    }
-    .button-margin {
-      margin-top: 100px; /* Adjust the value as needed */
-    }    
-  </style>
+  
     <h3>Python Environment Setup</h3>
   
     <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
@@ -457,7 +492,7 @@ function getWebviewContent_pythonEnvSidebar() {
         <select id="envType">
           <option value="Conda">Conda</option>
           <option value="Virtualenv (venv)">Virtualenv (venv)</option>
-      </select>
+        </select>
       </div>
       <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; width: 50%;">
         <button onclick="setupPython()">Setup Environment</button>
@@ -471,7 +506,83 @@ function getWebviewContent_pythonEnvSidebar() {
   </body>
   </html>`;
   
-}  
+}
+
+class TFLiteWebView implements vscode.WebviewViewProvider {
+  private _view?: vscode.WebviewView;
+  private _context: vscode.ExtensionContext;
+
+  constructor(context: vscode.ExtensionContext) {
+      this._context = context;
+  }
+
+  resolveWebviewView(webviewView: vscode.WebviewView) {
+      this._view = webviewView;
+      webviewView.webview.options = { enableScripts: true };
+      webviewView.webview.html = this.getHtmlContent();
+
+      webviewView.webview.onDidReceiveMessage(async message => {
+          if (message.command === 'runExe') {
+              await vscode.commands.executeCommand('nuedgewise.runVela', message.optimize, message.acc_cfg , message.sys_cfg);
+          }
+      });
+  }
+
+  private getHtmlContent(): string {
+      return `
+          <html>
+          <body>
+              <h3>Vela Runner</h3>
+              <h4>Parameters Setting</h4>
+
+              <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; width: 100%;">
+                <label>Optimize:</label>
+                <select id="optimize">
+                    <option value="Performance">Performance</option>
+                    <option value="Size">Size</option>
+                </select>
+                </div>
+  
+                <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; width: 100%;">
+                <label>Accelerator Config:</label>
+                <select id="acc_cfg">
+                    <option value="ethos-u55-256">ethos-u55-256</option>
+                    <option value="ethos-u55-128">ethos-u55-128</option>
+                    <option value="ethos-u55-64">ethos-u55-64</option>
+                    <option value="ethos-u55-32">ethos-u55-32</option>
+                    <option value="ethos-u65-512">ethos-u65-512</option>
+                    <option value="ethos-u65-256">ethos-u65-256</option>
+                </select>
+                </div>
+  
+                <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; width: 100%;">
+                <label>System Config:</label>
+                <select id="sys_cfg">
+                    <option value="Ethos_U55_High_End_Embedded">Ethos_U55_High_End_Embedded</option>
+                    <option value="Ethos_U65_High_End">Ethos_U65_High_End</option>
+                </select>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; width: 50%;">
+                  <button onclick="runExe()">Run</button>
+                </div>  
+              </div>
+
+              <script>
+                  const vscode = acquireVsCodeApi();
+                  function runExe() {
+                      const optimize = document.getElementById("optimize").value;
+                      const acc_cfg = document.getElementById("acc_cfg").value;
+                      const sys_cfg = document.getElementById("sys_cfg").value;
+                      vscode.postMessage({ command: "runExe", optimize, acc_cfg, sys_cfg });
+                  }
+              </script>
+          </body>
+          </html>
+      `;
+  }
+}
 
 // This method is called when your extension is deactivated
 export function deactivate() {}

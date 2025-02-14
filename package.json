@@ -1,8 +1,9 @@
 {
   "name": "nuedgewise",
-  "displayName": "nuedgewise",
-  "description": "nuedgewise env helper",
-  "version": "0.0.1",
+  "displayName": "NuEdgeWise",
+  "description": "NuEdgeWise env helper",
+  "version": "0.0.2",
+  "publisher": "NuEdgeWise",
   "engines": {
     "vscode": "^1.54.0"
   },
@@ -24,6 +25,10 @@
       {
         "command": "nuedgewise.setupPythonEnv",
         "title": "NuEdgeWise: Set Up Python Environment"
+      },
+      {
+        "command": "nuedgewise.runVela",
+        "title": "NuEdgeWise: Run Vela TFLite Conversion"
       }
     ],
     "viewsContainers": {
@@ -31,7 +36,7 @@
         {
           "id": "NuEdgeWise",
           "title": "NuEdgeWise",
-          "icon": "resources/n-svgrepo-com.svg"
+          "icon": "resources/nuedgewise.svg"
         }
       ]
     },
@@ -46,10 +51,23 @@
           "id": "pythonEnvSidebar",
           "name": "Python Environment Setup",
           "type": "webview"
+        },
+        {
+          "id": "velaTFLiteConversion",
+          "name": "Vela TFLite Conversion",
+          "type": "webview"
         }
       ]
     }    
   },
+  "assets": [
+    "resources/vela-4_0_1.exe",
+    "resources/default_vela.ini"
+  ],
+  "files": [
+    "resources/vela-4_0_1.exe",
+    "resources/default_vela.ini"
+  ],
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
