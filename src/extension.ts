@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from "os";
 
 interface Repository {
     name: string;
@@ -20,6 +21,22 @@ const github_repositories: Repository[] = [
     { name: 'ML_YOLO', url: 'https://github.com/OpenNuvoton/ML_YOLO' }
 ];
 
+function resolvePath(inputPath: string): string {
+  const userHome = os.homedir();
+  //vscode.window.showInformationMessage(userHome);
+
+  // Replace macros
+  let finalPath = inputPath
+    .replace("${userHome}", userHome);
+
+  // Resolve relative paths against workspace
+  if (!path.isAbsolute(finalPath)) {
+    finalPath = path.join(userHome, finalPath);
+  }
+
+  return finalPath;
+}
+
 function findCondaPath() {
     const commonPaths = [
         'C:\\ProgramData\\miniforge3',
@@ -27,6 +44,13 @@ function findCondaPath() {
         'C:\\ProgramData\\Miniconda3',
         'C:\\Users\\%USERNAME%\\Miniconda3'
     ];
+
+    // get py destination folder from config
+    const config = vscode.workspace.getConfiguration("nuEdgeWisePythonEnv");
+    const rawPath = config.get<string>("addingCondaBinPath") || path.join("${userHome}", "miniforge3");
+    const newFolderPath = resolvePath(rawPath);
+
+    commonPaths.push(newFolderPath);
 
     for (const basePath of commonPaths) {
         const condaBinPath = path.join(basePath, 'condabin');
@@ -56,41 +80,36 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         // Prompt user to select a destination folder
-        const destinationUri = await vscode.window.showOpenDialog({
-            canSelectFolders: true,
-            openLabel: 'Select Parent Folder for Cloning',
-        });
-
-        if (!destinationUri || destinationUri.length === 0) {
-            vscode.window.showErrorMessage('No destination folder selected.');
-            return;
-        }
-
-        const parentPath = destinationUri[0].fsPath;
+        //const destinationUri = await vscode.window.showOpenDialog({
+        //    canSelectFolders: true,
+        //    openLabel: 'Select Parent Folder for Cloning',
+        //});
+        //if (!destinationUri || destinationUri.length === 0) {
+        //    vscode.window.showErrorMessage('No destination folder selected.');
+        //    return;
+        //}
+        //const parentPath = destinationUri[0].fsPath;
 
         // Prompt user for the directory name to create
-        //const folderName = await vscode.window.showInputBox({
-        //    prompt: 'Enter a name for the new folder where repositories will be cloned',
-        //    placeHolder: 'my_repos',
-        //});
-		    const folderName = 'NuEdgeWise'; // use default folder name
-        if (!folderName) {
-            vscode.window.showErrorMessage('No folder name provided.');
-            return;
-        }
-
-        // Create the directory
-        const newFolderPath = path.join(parentPath, folderName);
-        if (!fs.existsSync(newFolderPath)) {
-            fs.mkdirSync(newFolderPath, { recursive: true });
-        }
-
-        // Create or reuse an integrated terminal in VS Code
-        //let terminal = vscode.window.terminals.find(t => t.name === "Git Clone Terminal");
-        //if (!terminal) {
-        //    terminal = vscode.window.createTerminal("Git Clone Terminal");
+		    //const folderName = 'NuEdgeWise'; // use default folder name
+        //if (!folderName) {
+        //    vscode.window.showErrorMessage('No folder name provided.');
+        //    return;
         //}
-        //terminal.show();
+        // Create the directory
+        //const newFolderPath = path.join(parentPath, folderName);
+        //if (!fs.existsSync(newFolderPath)) {
+        //    fs.mkdirSync(newFolderPath, { recursive: true });
+        //}
+
+        // get py destination folder from config
+        const config = vscode.workspace.getConfiguration("nuEdgeWisePythonEnv");
+        const rawPath = config.get<string>("defaultNuEdgeWisePath") || path.join("${userHome}", "NuEdgeWise");
+        const newFolderPath = resolvePath(rawPath);
+        // Create the directory
+        if (!fs.existsSync(newFolderPath)) {
+          fs.mkdirSync(newFolderPath, { recursive: true });
+        }
 
         // Clone repositories inside the created directory
         const urls = repoUrls.split(',').map(url => url.trim());
@@ -148,16 +167,22 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Command to set up a Python environment (supports venv and Conda)
 	const setupPythonEnv = vscode.commands.registerCommand('nuedgewise.setupPythonEnv', async (msg_envType: string, msg_envName: string) => {
+       // User choose manually
+       //const projectUri = await vscode.window.showOpenDialog({
+       //    canSelectFolders: true,
+       //    openLabel: 'Select Project/NuEdgeWise Folder for Python Environment Setup',
+       //});
+       //if (!projectUri || projectUri.length === 0) {
+       //    vscode.window.showErrorMessage('No project folder selected.');
+       //    return;
+       //}
+       //const projectPath = projectUri[0].fsPath;
 
-       const projectUri = await vscode.window.showOpenDialog({
-           canSelectFolders: true,
-           openLabel: 'Select Project/NuEdgeWise Folder for Python Environment Setup',
-       });
-       if (!projectUri || projectUri.length === 0) {
-           vscode.window.showErrorMessage('No project folder selected.');
-           return;
-       }
-       const projectPath = projectUri[0].fsPath;
+       // get py destination folder from config
+       const config = vscode.workspace.getConfiguration("nuEdgeWisePythonEnv");
+       const rawPath = config.get<string>("defaultNuEdgeWisePath") || path.join("${userHome}", "NuEdgeWise");
+       const newFolderPath = resolvePath(rawPath);
+       const projectPath = path.join(newFolderPath, "NuEdgeWise");
 
        // Ask user to choose between venv and Conda
        let envType = await vscode.window.showQuickPick(["Conda"], {

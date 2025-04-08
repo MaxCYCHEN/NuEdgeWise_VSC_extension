@@ -1,9 +1,10 @@
 {
   "name": "nuedgewise",
-  "displayName": "NuEdgeWise",
+  "displayName": "Nuvoton NuEdgeWise",
   "description": "NuEdgeWise env helper",
-  "version": "0.0.2",
-  "publisher": "NuEdgeWise",
+  "version": "0.0.3",
+  "publisher": "Nuvoton",
+  "icon": "Nuvoton_VSCode_icon.png",
   "engines": {
     "vscode": "^1.54.0"
   },
@@ -58,7 +59,23 @@
           "type": "webview"
         }
       ]
-    }    
+    },
+    "configuration": {
+    "type": "object",
+    "title": "NuEdgeWise Python Env Setup",
+    "properties": {
+      "nuEdgeWisePythonEnv.defaultNuEdgeWisePath": {
+        "type": "string",
+        "default": "${userHome}/NuEdgeWise",
+        "description": "Default path to save the NuEdgeWise and tools folder (can use ${userHome})"
+        },
+      "nuEdgeWisePythonEnv.addingCondaBinPath": {
+        "type": "string",
+        "default": "${userHome}/miniforge3",
+        "description": "The adding Conda Bin Path. If the default paths are not correct, please add the correct path. Can use ${userHome}"
+        }  
+      }
+    }   
   },
   "assets": [
     "resources/vela-4_0_1.exe",

@@ -5,7 +5,8 @@ This is the VSCode extension to help you prepare the [NuEdgeWise](https://github
 ## Features
 
 - `NuEdgeWise: Clone Multiple Repositories`: Help you download all tools and example applications in [NuEdgeWise](https://github.com/OpenNuvoton/NuEdgeWise)
-- `NuEdgeWise: Set Up Python Environment`: Help you setup python ENV.
+- `NuEdgeWise: Set Up Python Environment`: Help you setup NuEdgeWise python ENV.
+- `NuEdgeWise: Run Vela TFLite Conversion`: Support vela compiler to convert TFLite int8 model to vela TFLite.
 
 ## Requirements
 
@@ -19,22 +20,9 @@ This is the VSCode extension to help you prepare the [NuEdgeWise](https://github
 
 ## Release Notes
 
-### 1.0.0
+### 0.0.3
 
-Initial release of ...
+- Update NuEdgeWise install path and Conda bin path basing on default config (Command Palette → Preferences: Open Settings (UI) → Search for `NuEdgeWise Python Env Setup` → set the default NuEdgeWise path)
+- Change to Nuvoton publisher
 
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
 
