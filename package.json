@@ -2,7 +2,7 @@
   "name": "nuedgewise",
   "displayName": "Nuvoton NuEdgeWise",
   "description": "NuEdgeWise env helper",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "Nuvoton",
   "icon": "Nuvoton_VSCode_icon.png",
   "engines": {

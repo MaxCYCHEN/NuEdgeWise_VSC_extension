@@ -439,8 +439,8 @@ export function activate(context: vscode.ExtensionContext) {
 function getWebviewContent_cloneSidebar() {
   const repos = github_repositories;
 
-  const repoListItems = repos.map(repo => 
-    `<li><input type="checkbox" value="${repo.url}" checked>${repo.name}</li>`
+  const repoListItems = repos.map((repo, index) => 
+    `<li><input type="checkbox" value="${repo.url}" checked${index === 0 ? ' disabled' : ''}>${repo.name}</li>`
   ).join('');
 
   return `<!DOCTYPE html>

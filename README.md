@@ -10,9 +10,15 @@ This is the VSCode extension to help you prepare the [NuEdgeWise](https://github
 
 ## Requirements
 
-- Need to install [git](https://git-scm.com/downloads) and conda(Abot conda, we recommand to use [Miniforge](https://github.com/conda-forge/miniforge))
+- Need to install [git](https://git-scm.com/downloads) and miniconda(About conda, we recommand to use [Miniforge](https://github.com/conda-forge/miniforge))
+- Users need to first clone the NuEdgeWise repository from the CLONE REPOS tab, and then setup the NuEdgeWise_env Python environment from the PYTHON ENVIRONMENT SETUP tab.
 
 ## Extension Settings
+- If you use a different path for your NuEdgeWise directory
+    - Command Palette (Ctrl + shift + P) → Preferences: Open Settings (UI) → Search for `NuEdgeWise Python Env Setup` → set the `Default NuEdgeWise Path` to yours
+
+- If you have changed your Conda installation path from the default, please make sure to update it accordingly.
+    - Command Palette (Ctrl + shift + P) → Preferences: Open Settings (UI) → Search for `NuEdgeWise Python Env Setup` → set the `Adding Conda Bin Path` to yours
 
 
 ## Known Issues
@@ -27,7 +33,7 @@ This is the VSCode extension to help you prepare the [NuEdgeWise](https://github
 
 ### 0.0.3
 
-- Update NuEdgeWise install path and Conda bin path basing on default config (Command Palette → Preferences: Open Settings (UI) → Search for `NuEdgeWise Python Env Setup` → set the default NuEdgeWise path)
+- Update NuEdgeWise install path and Conda bin path basing on default config
 - Change to Nuvoton publisher
 
 
