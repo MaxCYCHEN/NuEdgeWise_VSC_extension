@@ -20,6 +20,11 @@ This is the VSCode extension to help you prepare the [NuEdgeWise](https://github
 
 ## Release Notes
 
+### 0.0.4
+
+- Add more default condabin paths
+- Remove some vela configs
+
 ### 0.0.3
 
 - Update NuEdgeWise install path and Conda bin path basing on default config (Command Palette → Preferences: Open Settings (UI) → Search for `NuEdgeWise Python Env Setup` → set the default NuEdgeWise path)

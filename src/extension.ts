@@ -38,11 +38,14 @@ function resolvePath(inputPath: string): string {
 }
 
 function findCondaPath() {
+  const currentUsername = os.userInfo().username;
     const commonPaths = [
-        'C:\\ProgramData\\miniforge3',
-        'C:\\Users\\%USERNAME%\\miniforge3',
-        'C:\\ProgramData\\Miniconda3',
-        'C:\\Users\\%USERNAME%\\Miniconda3'
+        `C:\\ProgramData\\miniforge3`,
+        `C:\\Users\\${currentUsername}\\AppData\\Local\\miniforge3`,
+        `C:\\Users\\${currentUsername}\\miniforge3`,
+        `C:\\ProgramData\\Miniconda3`,
+        `C:\\Users\\${currentUsername}\\Miniconda3`,
+        `C:\\Users\\${currentUsername}\\AppData\\Local\\Miniconda3`
     ];
 
     // get py destination folder from config
@@ -574,10 +577,6 @@ class TFLiteWebView implements vscode.WebviewViewProvider {
                 <select id="acc_cfg">
                     <option value="ethos-u55-256">ethos-u55-256</option>
                     <option value="ethos-u55-128">ethos-u55-128</option>
-                    <option value="ethos-u55-64">ethos-u55-64</option>
-                    <option value="ethos-u55-32">ethos-u55-32</option>
-                    <option value="ethos-u65-512">ethos-u65-512</option>
-                    <option value="ethos-u65-256">ethos-u65-256</option>
                 </select>
                 </div>
   
@@ -585,7 +584,6 @@ class TFLiteWebView implements vscode.WebviewViewProvider {
                 <label>System Config:</label>
                 <select id="sys_cfg">
                     <option value="Ethos_U55_High_End_Embedded">Ethos_U55_High_End_Embedded</option>
-                    <option value="Ethos_U65_High_End">Ethos_U65_High_End</option>
                 </select>
                 </div>
                 
