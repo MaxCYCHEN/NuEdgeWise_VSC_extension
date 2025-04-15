@@ -26,6 +26,9 @@ This is the VSCode extension to help you prepare the [NuEdgeWise](https://github
 
 ## Release Notes
 
+### 0.0.5
+- Add Extension Pack
+
 ### 0.0.4
 
 - Add more default condabin paths

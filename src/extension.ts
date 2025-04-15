@@ -519,7 +519,6 @@ function getWebviewContent_pythonEnvSidebar() {
       <label for="envType">Environment Type:</label>
         <select id="envType">
           <option value="Conda">Conda</option>
-          <option value="Virtualenv (venv)">Virtualenv (venv)</option>
         </select>
       </div>
       <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; width: 50%;">

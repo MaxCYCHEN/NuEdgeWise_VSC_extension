@@ -2,14 +2,18 @@
   "name": "nuedgewise",
   "displayName": "Nuvoton NuEdgeWise",
   "description": "NuEdgeWise env helper",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "publisher": "Nuvoton",
   "icon": "Nuvoton_VSCode_icon.png",
   "engines": {
     "vscode": "^1.54.0"
   },
   "categories": [
-    "Other"
+    "Extension Packs"
+  ],
+  "extensionPack": [ 
+    "ms-python.python",
+    "ms-toolsai.jupyter"
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
